@@ -40,3 +40,12 @@ services:
       - nsqlookupd  
     ports:
       - "4171:4171"
+  web:
+    build: .
+    volumes:
+      - ./:/go/src/MrFuku/socialpool
+    depends_on:
+      - mongo
+      - nsqlookupd
+    ports:
+      - "8080:8080"
