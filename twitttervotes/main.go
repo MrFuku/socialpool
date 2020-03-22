@@ -38,3 +38,18 @@ func closedb() {
 	db.Close()
 	log.Println("データベース接続が閉じられました")
 }
+
+type pool struct {
+	Options []string
+}
+
+func loadOptions() ([]string, error) {
+	var options []string
+	iter := db.DB("ballots").C("polls").Find(nil).Iter()
+	var p pool
+	for iter.Next(&p) {
+		options = append(options, p.Options...)
+	}
+	iter.Close()
+	return options, iter.Err()
+}
