@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/nsqio/go-nsq"
 	"gopkg.in/mgo.v2"
 )
 
 var fatalErr error
+var countsLock sync.Mutex
+var counts map[string]int
 
 func fatal(e error) {
 	fmt.Println(e)
@@ -42,4 +46,27 @@ func main() {
 		db.Close()
 	}()
 	pollData := db.DB("ballots").C("polls")
+
+	log.Println("NSQに接続します...")
+	q, err := nsq.NewConsumer("votes", "counter", nsq.NewConfig())
+	if err != nil {
+		fatal(err)
+		return
+	}
+
+	q.AddConcurrentHandlers(nsq.HandlerFunc(func(m *nsq.Message) error {
+		countsLock.Lock()
+		defer countsLock.Unlock()
+		if counts == nil {
+			counts = make(map[string]int)
+		}
+		vote := string(m.Body)
+		counts[vote]++
+		return nil
+	}))
+
+	if err := q.ConnectToNSQLookupd("nsqlookupd:4161"); err != nil {
+		fatal(err)
+		return
+	}
 }
