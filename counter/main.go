@@ -10,7 +10,10 @@ import (
 
 	"github.com/nsqio/go-nsq"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
+
+const updateDuration = 1 * time.Second
 
 var fatalErr error
 var countsLock sync.Mutex
@@ -69,4 +72,33 @@ func main() {
 		fatal(err)
 		return
 	}
+
+	log.Println("NSQ上での投票を待機します...")
+	var updater *time.Timer
+	updater = time.AfterFunc(updateDuration, func() {
+		countsLock.Lock()
+		defer countsLock.Unlock()
+		if len(couts) == 0 {
+			log.Println("新しい投票はありません。データベースの更新をスキップします")
+		} else {
+			log.Println("データベースを更新します...")
+			log.Println(counts)
+			ok := true
+			for option, count := range counts {
+				sel := bson.M{"options": bson.M{"$in": []string{option}}}
+				up := bson.M{"$inc": bson.M{"results." + option: count}}
+				if _, err := pollData.UpdateAll(sel, up); err != nil {
+					log.Println("更新に失敗しました：", err)
+					ok = false
+					continue
+				}
+				counts[option] = 0
+			}
+			if ok {
+				log.Println("データベースの更新が完了しました")
+				counts = nil
+			}
+		}
+		updater.Reset(updateDuration)
+	})
 }
