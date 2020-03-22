@@ -59,7 +59,7 @@ func main() {
 		return
 	}
 
-	q.AddConcurrentHandlers(nsq.HandlerFunc(func(m *nsq.Message) error {
+	q.AddHandler(nsq.HandlerFunc(func(m *nsq.Message) error {
 		countsLock.Lock()
 		defer countsLock.Unlock()
 		if counts == nil {
@@ -80,7 +80,7 @@ func main() {
 	updater = time.AfterFunc(updateDuration, func() {
 		countsLock.Lock()
 		defer countsLock.Unlock()
-		if len(couts) == 0 {
+		if len(counts) == 0 {
 			log.Println("新しい投票はありません。データベースの更新をスキップします")
 		} else {
 			log.Println("データベースを更新します...")
