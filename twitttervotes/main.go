@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/joho/godotenv"
+	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/mgo.v2"
 )
@@ -52,4 +53,19 @@ func loadOptions() ([]string, error) {
 	}
 	iter.Close()
 	return options, iter.Err()
+}
+
+func publishVotes(votes <-chan string) <-chan struct{} {
+	stopchan := make(chan struct{}, 1)
+	pub, _ := nsq.NewProducer("nsqd:4150", nsq.NewConfig())
+	go func() {
+		for vote := range votes {
+			pub.Publish("votes", []byte(vote))
+		}
+		log.Println("Publisher: 停止中です")
+		pub.Stop()
+		log.Println("Publisher: 停止しました")
+		stopchan <- struct{}{}
+	}()
+	return stopchan
 }
