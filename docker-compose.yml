@@ -41,7 +41,7 @@ services:
     ports:
       - "4171:4171"
   web:
-    build: .
+    build: ./twitttervotes
     volumes:
       - ./:/go/src/MrFuku/socialpool
     depends_on:
@@ -49,3 +49,12 @@ services:
       - nsqlookupd
     ports:
       - "8080:8080"
+  counter:
+    build: ./counter
+    volumes:
+      - ./:/go/src/MrFuku/socialpool
+    depends_on:
+      - mongo
+      - nsqlookupd
+    ports:
+      - "8082:8082"
