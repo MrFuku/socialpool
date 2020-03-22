@@ -1,6 +1,6 @@
 FROM golang:1.14
 
-WORKDIR /go/src/MrFuku/socialpool
+WORKDIR /go/src/MrFuku/socialpool/twitttervotes
 
 COPY . .
 
