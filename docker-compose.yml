@@ -58,3 +58,12 @@ services:
       - nsqlookupd
     ports:
       - "8082:8082"
+  api:
+    build: ./api
+    volumes:
+      - ./:/go/src/MrFuku/socialpool
+    depends_on:
+      - mongo
+      - nsqlookupd
+    ports:
+      - "8083:8083"
