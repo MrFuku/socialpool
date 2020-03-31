@@ -40,7 +40,7 @@ services:
       - nsqlookupd  
     ports:
       - "4171:4171"
-  web:
+  twitttervotes:
     build: ./twitttervotes
     volumes:
       - ./:/go/src/MrFuku/socialpool
@@ -60,6 +60,7 @@ services:
       - "8082:8082"
   api:
     build: ./api
+    restart: always
     volumes:
       - ./:/go/src/MrFuku/socialpool
     depends_on:
@@ -67,3 +68,12 @@ services:
       - nsqlookupd
     ports:
       - "8083:8083"
+  web:
+    build: ./web
+    restart: always
+    volumes:
+      - ./:/go/src/MrFuku/socialpool
+    depends_on:
+      - api
+    ports:
+      - "8084:8084"
